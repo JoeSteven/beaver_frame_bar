@@ -25,8 +25,6 @@ abstract class BeaverFrameBarPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<List<Uint8List>> getKeyFrames(String videoPath);
-
   Future<Uint8List?> getFirstFrame(String videoPath);
 
   Stream<Uint8List> getKeyFramesStream(

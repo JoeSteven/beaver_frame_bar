@@ -5,6 +5,10 @@ A video progress bar with video frame preview
 usage:
 
 ```dart
+                BeaverFrameBarCacheControl.setCacheEnabled(true/false)// enable frame cache
+                BeaverFrameBarCacheControl.clearAllCache();// clear cache
+                BeaverFrameBarCacheControl.clearCache(videoPath);//clear one vidoe cache
+
                 _progressController = BeaverFrameBarController(videoPath: video!);
 
                 BeaverFrameBar(
