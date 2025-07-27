@@ -156,7 +156,9 @@ class BeaverFrameBarController {
   ValueNotifier<Pair<Uint8List?, int>> get firstFrame => _firstFrame;
   ValueNotifier<List<Uint8List>> get frames => _frames;
   final _subscriptions = <StreamSubscription<Uint8List>>[];
-  final _scrollController = ScrollController();
+  late final ScrollController _scrollController;
+  bool _detached = false;
+  late final Function() _scrollListener;
 
   BeaverFrameBarController({
     required this.videoPath,
@@ -165,14 +167,30 @@ class BeaverFrameBarController {
     this.delayAfterFirstFrame = 16,
     required this.onProgressChanged,
   }) {
-    _scrollController.addListener(() {
-      // 只有在非程序化滚动时才执行回调
-      if (_scrollController.position.userScrollDirection !=
-          ScrollDirection.idle) {
-        _dispatchProgress();
-      }
-    });
+    _scrollListener = _onScrollUpdate;
+    _scrollController = ScrollController(
+      onAttach: (position) {
+        _detached = false;
+        if (_pendingProgress != null) {
+          Future.delayed(Duration(milliseconds: 30), () {
+            seekTo(_pendingProgress!);
+            _pendingProgress = null;
+          });
+        }
+      },
+      onDetach: (position) {
+        _detached = true;
+      },
+    );
+    _scrollController.addListener(_scrollListener);
     _loadFrame();
+  }
+
+  void _onScrollUpdate() {
+    if (_scrollController.position.userScrollDirection !=
+        ScrollDirection.idle) {
+      _dispatchProgress();
+    }
   }
 
   bool _isFrameCountUpdated = false;
@@ -219,17 +237,28 @@ class BeaverFrameBarController {
       subscription.cancel();
     }
     _subscriptions.clear();
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
   }
 
   bool _isUserTakeOver = false;
+  double? _pendingProgress;
   void seekTo(double progress) {
     if (_isUserTakeOver) {
       return;
     }
     final realProgress = progress.clamp(0.0, 1.0);
-    _scrollController.jumpTo(
-      realProgress * _scrollController.position.maxScrollExtent,
-    );
+    if (_detached) {
+      _pendingProgress = realProgress;
+      return;
+    }
+    try {
+      _scrollController.jumpTo(
+        realProgress * _scrollController.position.maxScrollExtent,
+      );
+    } catch (e) {
+      _pendingProgress = realProgress;
+    }
   }
 
   _dispatchProgress() {

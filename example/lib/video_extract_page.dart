@@ -21,6 +21,7 @@ class _VideoExtractPageState extends State<VideoExtractPage> {
   BeaverFrameBarController? _progressController;
   VideoPlayerController? _videoController;
   double _currentProgress = 0.0;
+  bool showControls = true;
 
   @override
   void dispose() {
@@ -100,7 +101,14 @@ class _VideoExtractPageState extends State<VideoExtractPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              ElevatedButton(onPressed: () => _pickVideo(), child: Text('选择')),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    showControls = !showControls;
+                  });
+                },
+                child: Text('controller'),
+              ),
               ElevatedButton(
                 onPressed: () => _pickVideo(path: "1.MOV"),
                 child: Text('视频1'),
@@ -163,12 +171,16 @@ class _VideoExtractPageState extends State<VideoExtractPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: 8),
-                  BeaverFrameBar(
-                    controller: _progressController!,
-                    height: 50,
-                    progressBarColor: Colors.white,
-                    backgroundColor: Colors.black,
-                    progressBarWidth: 3.0,
+                  Visibility(
+                    visible: showControls,
+                    maintainState: true,
+                    child: BeaverFrameBar(
+                      controller: _progressController!,
+                      height: 50,
+                      progressBarColor: Colors.white,
+                      backgroundColor: Colors.black,
+                      progressBarWidth: 3.0,
+                    ),
                   ),
                 ],
               ),
