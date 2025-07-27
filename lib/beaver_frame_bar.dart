@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:beaver_frame_bar/plugin/beaver_frame_bar_platform_interface.dart';
 import 'package:beaver_frame_bar/plugin/pair.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 class BeaverFrameBar extends StatelessWidget {
   final BeaverFrameBarController controller;
@@ -31,51 +32,60 @@ class BeaverFrameBar extends StatelessWidget {
         final actualWidth = constraints.maxWidth;
         return Stack(
           children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: ClampingScrollPhysics(),
-              controller: controller._scrollController,
-              child: SizedBox(
-                height: height,
-                child: ValueListenableBuilder(
-                  valueListenable: controller.firstFrame,
-                  builder: (context, firstFrame, child) {
-                    return ValueListenableBuilder(
-                      valueListenable: controller.frames,
-                      builder: (context, frames, child) {
-                        return Row(
-                          children: [
-                            SizedBox(width: actualWidth / 2),
-                            Stack(
-                              children: [
-                                if (firstFrame.first == null && frames.isEmpty)
-                                  SizedBox.shrink(),
-                                Stack(
-                                  children: [
-                                    SizedBox(
-                                      width: actualWidth / 2,
-                                      child: _buildBackgroundWidget(),
-                                    ),
-                                    if (firstFrame.first != null)
-                                      _buildFramesWidget(
-                                        List.filled(
-                                          firstFrame.second,
-                                          firstFrame.first!,
-                                        ),
-                                      ),
-                                    if (frames.isNotEmpty)
-                                      _buildFramesWidget(frames),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            if (firstFrame.first != null || frames.isNotEmpty)
+            Listener(
+              onPointerDown: (event) {
+                controller._userScrollStart();
+              },
+              onPointerUp: (event) {
+                controller._userScrollEnd();
+              },
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: ClampingScrollPhysics(),
+                controller: controller._scrollController,
+                child: SizedBox(
+                  height: height,
+                  child: ValueListenableBuilder(
+                    valueListenable: controller.firstFrame,
+                    builder: (context, firstFrame, child) {
+                      return ValueListenableBuilder(
+                        valueListenable: controller.frames,
+                        builder: (context, frames, child) {
+                          return Row(
+                            children: [
                               SizedBox(width: actualWidth / 2),
-                          ],
-                        );
-                      },
-                    );
-                  },
+                              Stack(
+                                children: [
+                                  if (firstFrame.first == null &&
+                                      frames.isEmpty)
+                                    SizedBox.shrink(),
+                                  Stack(
+                                    children: [
+                                      SizedBox(
+                                        width: actualWidth / 2,
+                                        child: _buildBackgroundWidget(),
+                                      ),
+                                      if (firstFrame.first != null)
+                                        _buildFramesWidget(
+                                          List.filled(
+                                            firstFrame.second,
+                                            firstFrame.first!,
+                                          ),
+                                        ),
+                                      if (frames.isNotEmpty)
+                                        _buildFramesWidget(frames),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              if (firstFrame.first != null || frames.isNotEmpty)
+                                SizedBox(width: actualWidth / 2),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -148,9 +158,6 @@ class BeaverFrameBarController {
   final _subscriptions = <StreamSubscription<Uint8List>>[];
   final _scrollController = ScrollController();
 
-  // 标志位：控制是否执行进度回调
-  bool _isProgrammaticScroll = false;
-
   BeaverFrameBarController({
     required this.videoPath,
     this.maxFrameCount = 30,
@@ -160,8 +167,9 @@ class BeaverFrameBarController {
   }) {
     _scrollController.addListener(() {
       // 只有在非程序化滚动时才执行回调
-      if (!_isProgrammaticScroll) {
-        _callProgress();
+      if (_scrollController.position.userScrollDirection !=
+          ScrollDirection.idle) {
+        _dispatchProgress();
       }
     });
     _loadFrame();
@@ -213,22 +221,30 @@ class BeaverFrameBarController {
     _subscriptions.clear();
   }
 
+  bool _isUserTakeOver = false;
   void seekTo(double progress) {
+    if (_isUserTakeOver) {
+      return;
+    }
     final realProgress = progress.clamp(0.0, 1.0);
-    _isProgrammaticScroll = true;
     _scrollController.jumpTo(
       realProgress * _scrollController.position.maxScrollExtent,
     );
-    // 延迟重置标志位，确保滚动动画完成
-    Future.delayed(Duration(milliseconds: 100), () {
-      _isProgrammaticScroll = false;
-    });
   }
 
-  _callProgress() {
+  _dispatchProgress() {
     final progress =
         _scrollController.position.pixels /
         _scrollController.position.maxScrollExtent;
-    onProgressChanged?.call(progress);
+    onProgressChanged?.call(progress.clamp(0.0, 1.0));
+  }
+
+  void _userScrollStart() {
+    _isUserTakeOver = true;
+    _dispatchProgress();
+  }
+
+  void _userScrollEnd() {
+    _isUserTakeOver = false;
   }
 }
