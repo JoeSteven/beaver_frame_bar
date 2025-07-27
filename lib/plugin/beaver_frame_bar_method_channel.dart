@@ -47,6 +47,7 @@ class MethodChannelBeaverFrameBar extends BeaverFrameBarPlatform {
   Stream<Uint8List> getKeyFramesStream(
     String videoPath, {
     int? frameCount,
+    int? frameInterval,
     bool skipFirstFrame = false,
   }) async* {
     // 先尝试从缓存获取
@@ -54,6 +55,7 @@ class MethodChannelBeaverFrameBar extends BeaverFrameBarPlatform {
     final cachedFrames = await cache.getCachedKeyFrames(
       videoPath,
       skipFirstFrame: skipFirstFrame,
+      frameInterval: frameInterval,
     );
 
     if (cachedFrames.isNotEmpty) {
@@ -68,14 +70,13 @@ class MethodChannelBeaverFrameBar extends BeaverFrameBarPlatform {
 
     try {
       // 然后流式获取所有关键帧
-      final List<dynamic> frames = await methodChannel.invokeMethod(
-        'getKeyFrames',
-        {
-          'path': videoPath,
-          'frameCount': frameCount,
-          'skipFirstFrame': skipFirstFrame,
-        },
-      );
+      final List<dynamic> frames = await methodChannel
+          .invokeMethod('getKeyFrames', {
+            'path': videoPath,
+            'frameCount': frameCount,
+            'frameInterval': frameInterval,
+            'skipFirstFrame': skipFirstFrame,
+          });
 
       // 收集所有帧用于缓存
       final frameList = <Uint8List>[];
@@ -93,7 +94,12 @@ class MethodChannelBeaverFrameBar extends BeaverFrameBarPlatform {
 
       // 异步缓存所有帧（不阻塞返回）
       if (frameList.isNotEmpty) {
-        cache.cacheFrames(videoPath, frameList, skipFirstFrame: skipFirstFrame);
+        cache.cacheFrames(
+          videoPath,
+          frameList,
+          skipFirstFrame: skipFirstFrame,
+          frameInterval: frameInterval,
+        );
       }
     } on PlatformException catch (e) {
       print("Failed to get key frames stream: '$e'");

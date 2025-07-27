@@ -53,7 +53,22 @@ class _VideoExtractPageState extends State<VideoExtractPage> {
 
       // 创建新的进度控制器
       _progressController?.dispose();
-      _progressController = BeaverFrameBarController(videoPath: video!);
+      _progressController = BeaverFrameBarController(
+        videoPath: video!,
+        onProgressChanged: (progress) {
+          setState(() {
+            _currentProgress = progress;
+            if (_videoController?.value.isPlaying == true) {
+              _videoController?.pause();
+            }
+            final newPosition =
+                _videoController!.value.duration.inMilliseconds * progress;
+            _videoController?.seekTo(
+              Duration(milliseconds: newPosition.toInt()),
+            );
+          });
+        },
+      );
       _videoController?.dispose();
       _videoController = VideoPlayerController.file(File(video));
       _videoController?.initialize().then((_) {
@@ -68,6 +83,7 @@ class _VideoExtractPageState extends State<VideoExtractPage> {
             if (duration.inMilliseconds > 0) {
               _currentProgress =
                   position.inMilliseconds / duration.inMilliseconds;
+              _progressController?.seekTo(_currentProgress);
             }
           });
         }
@@ -90,11 +106,11 @@ class _VideoExtractPageState extends State<VideoExtractPage> {
                 child: Text('视频1'),
               ),
               ElevatedButton(
-                onPressed: () => _pickVideo(path: "2.MOV"),
+                onPressed: () => _pickVideo(path: "5.MOV"),
                 child: Text('视频2'),
               ),
               ElevatedButton(
-                onPressed: () => _pickVideo(path: "3.MOV"),
+                onPressed: () => _pickVideo(path: "6.mov"),
                 child: Text('视频3'),
               ),
               ElevatedButton(
@@ -150,25 +166,9 @@ class _VideoExtractPageState extends State<VideoExtractPage> {
                   BeaverFrameBar(
                     controller: _progressController!,
                     height: 50,
-                    width: MediaQuery.of(context).size.width - 32,
                     progressBarColor: Colors.white,
                     backgroundColor: Colors.black,
                     progressBarWidth: 3.0,
-                    progress: _currentProgress,
-                    onProgressChanged: (progress) {
-                      setState(() {
-                        _currentProgress = progress;
-                        if (_videoController?.value.isPlaying == true) {
-                          _videoController?.pause();
-                        }
-                        final newPosition =
-                            _videoController!.value.duration.inMilliseconds *
-                            progress;
-                        _videoController?.seekTo(
-                          Duration(milliseconds: newPosition.toInt()),
-                        );
-                      });
-                    },
                   ),
                 ],
               ),

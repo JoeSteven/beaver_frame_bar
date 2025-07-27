@@ -30,6 +30,7 @@ abstract class BeaverFrameBarPlatform extends PlatformInterface {
   Stream<Uint8List> getKeyFramesStream(
     String videoPath, {
     int? frameCount,
+    int? frameInterval,
     bool skipFirstFrame = false,
   });
 }

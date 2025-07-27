@@ -17,8 +17,9 @@ public class BeaverFrameBarPlugin: NSObject, FlutterPlugin {
         return
       }
       let frameCount = args["frameCount"] as? Int
+      let frameInterval = args["frameInterval"] as? Int
       let skipFirstFrame = args["skipFirstFrame"] as? Bool ?? false
-      VideoFrameExtractor.extractKeyFrames(from: path, frameCount: frameCount, skipFirstFrame: skipFirstFrame) { images in
+      VideoFrameExtractor.extractKeyFrames(from: path, frameCount: frameCount, frameInterval: frameInterval, skipFirstFrame: skipFirstFrame) { images in
         result(images)
       }
     } else if call.method == "getFirstFrame" {
@@ -37,7 +38,7 @@ public class BeaverFrameBarPlugin: NSObject, FlutterPlugin {
 }
 
 class VideoFrameExtractor: NSObject {
-    static func extractKeyFrames(from videoPath: String, frameCount: Int?, skipFirstFrame: Bool, completion: @escaping ([FlutterStandardTypedData]?) -> Void) {
+    static func extractKeyFrames(from videoPath: String, frameCount: Int?, frameInterval: Int?, skipFirstFrame: Bool, completion: @escaping ([FlutterStandardTypedData]?) -> Void) {
         let startTime = Date()
         let asset = AVAsset(url: URL(fileURLWithPath: videoPath))
         let generator = AVAssetImageGenerator(asset: asset)
@@ -71,13 +72,35 @@ class VideoFrameExtractor: NSObject {
         let keyFrameExecutionTime = keyFrameEndTime.timeIntervalSince(startTime)
         print("Key frame extraction time: \(keyFrameExecutionTime) seconds")
 
-        // 如果指定了frameCount，则平均选择帧
+        // 计算目标帧数
+        var targetFrameCount = keyFrameTimes.count
+        
+        // 如果指定了frameInterval，根据视频时长计算帧数
+        if let frameInterval = frameInterval, frameInterval > 0 {
+            let duration = asset.duration
+            let durationInSeconds = CMTimeGetSeconds(duration)
+            let durationInMilliseconds = durationInSeconds * 1000
+            let calculatedFrameCount = Int(durationInMilliseconds / Double(frameInterval))
+            targetFrameCount = calculatedFrameCount
+        }
+        
+        // 如果指定了frameCount，则使用较小的值作为限制
+        if let frameCount = frameCount, frameCount > 0 {
+            targetFrameCount = min(targetFrameCount, frameCount)
+        }
+        
+        // 如果目标帧数小于等于0，则使用所有关键帧
+        if targetFrameCount <= 0 {
+            targetFrameCount = keyFrameTimes.count
+        }
+        
+        // 平均选择帧
         var selectedFrameTimes = keyFrameTimes
-        if let frameCount = frameCount, frameCount > 0 && keyFrameTimes.count > frameCount {
+        if targetFrameCount < keyFrameTimes.count {
             selectedFrameTimes = []
-            let step = Double(keyFrameTimes.count - 1) / Double(frameCount - 1)
+            let step = Double(keyFrameTimes.count - 1) / Double(targetFrameCount - 1)
             
-            for i in 0..<frameCount {
+            for i in 0..<targetFrameCount {
                 let index = Int(Double(i) * step)
                 if index < keyFrameTimes.count {
                     selectedFrameTimes.append(keyFrameTimes[index])

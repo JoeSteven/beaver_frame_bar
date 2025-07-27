@@ -137,6 +137,7 @@ class BeaverFrameBarCache {
     String videoPath,
     List<Uint8List> frames, {
     bool skipFirstFrame = false,
+    int? frameInterval,
   }) {
     if (!_isEnabled) return;
 
@@ -149,7 +150,10 @@ class BeaverFrameBarCache {
     if (frames.length > 1) {
       final keyFrames = skipFirstFrame ? frames : frames.skip(1).toList();
       if (keyFrames.isNotEmpty) {
-        cacheData(videoPath, _combineFrames(keyFrames), suffix: 'key_frames');
+        final suffix = frameInterval != null
+            ? 'key_frames_${frameInterval}ms'
+            : 'key_frames';
+        cacheData(videoPath, _combineFrames(keyFrames), suffix: suffix);
       }
     }
   }
@@ -207,11 +211,15 @@ class BeaverFrameBarCache {
   Future<List<Uint8List>> getCachedKeyFrames(
     String videoPath, {
     bool skipFirstFrame = false,
+    int? frameInterval,
   }) async {
     if (!_isEnabled) return [];
 
     try {
-      final combinedData = await getCache(videoPath, suffix: 'key_frames');
+      final suffix = frameInterval != null
+          ? 'key_frames_${frameInterval}ms'
+          : 'key_frames';
+      final combinedData = await getCache(videoPath, suffix: suffix);
       if (combinedData != null) {
         return _parseCombinedFrames(combinedData);
       }
