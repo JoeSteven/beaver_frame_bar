@@ -157,7 +157,6 @@ class BeaverFrameBarController {
   ValueNotifier<List<Uint8List>> get frames => _frames;
   final _subscriptions = <StreamSubscription<Uint8List>>[];
   late final ScrollController _scrollController;
-  bool _detached = false;
   late final Function() _scrollListener;
 
   BeaverFrameBarController({
@@ -170,16 +169,12 @@ class BeaverFrameBarController {
     _scrollListener = _onScrollUpdate;
     _scrollController = ScrollController(
       onAttach: (position) {
-        _detached = false;
         if (_pendingProgress != null) {
           Future.delayed(Duration(milliseconds: 30), () {
             seekTo(_pendingProgress!);
             _pendingProgress = null;
           });
         }
-      },
-      onDetach: (position) {
-        _detached = true;
       },
     );
     _scrollController.addListener(_scrollListener);
@@ -248,10 +243,6 @@ class BeaverFrameBarController {
       return;
     }
     final realProgress = progress.clamp(0.0, 1.0);
-    if (_detached) {
-      _pendingProgress = realProgress;
-      return;
-    }
     try {
       _scrollController.jumpTo(
         realProgress * _scrollController.position.maxScrollExtent,
