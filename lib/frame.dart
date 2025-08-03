@@ -14,17 +14,17 @@ class BeaverFrameBarCacheControl {
   }
 
   /// 清除所有缓存
-  Future<void> clearAllCache() async {
+  static Future<void> clearAllCache() async {
     BeaverFrameBarCache().clearAllCache();
   }
 
   /// 获取缓存大小（字节）
-  Future<int> getCacheSize() async {
+  static Future<int> getCacheSize() async {
     return BeaverFrameBarCache().getCacheSize();
   }
 
   /// 获取缓存文件数量
-  Future<int> getCacheFileCount() async {
+  static Future<int> getCacheFileCount() async {
     return BeaverFrameBarCache().getCacheFileCount();
   }
 }
