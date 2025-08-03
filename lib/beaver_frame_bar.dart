@@ -244,8 +244,10 @@ class BeaverFrameBarController {
     }
     final realProgress = progress.clamp(0.0, 1.0);
     try {
-      _scrollController.jumpTo(
+      _scrollController.animateTo(
         realProgress * _scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 100),
+        curve: Curves.linear,
       );
     } catch (e) {
       _pendingProgress = realProgress;

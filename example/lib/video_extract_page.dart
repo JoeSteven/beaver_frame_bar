@@ -110,17 +110,21 @@ class _VideoExtractPageState extends State<VideoExtractPage> {
                 child: Text('controller'),
               ),
               ElevatedButton(
+                onPressed: () => _pickVideo(path: null),
+                child: Text('选择'),
+              ),
+              ElevatedButton(
                 onPressed: () => _pickVideo(path: "1.MOV"),
                 child: Text('视频1'),
               ),
-              ElevatedButton(
-                onPressed: () => _pickVideo(path: "5.MOV"),
-                child: Text('视频2'),
-              ),
-              ElevatedButton(
-                onPressed: () => _pickVideo(path: "6.mov"),
-                child: Text('视频3'),
-              ),
+              // ElevatedButton(
+              //   onPressed: () => _pickVideo(path: "5.MOV"),
+              //   child: Text('视频2'),
+              // ),
+              // ElevatedButton(
+              //   onPressed: () => _pickVideo(path: "6.mov"),
+              //   child: Text('视频3'),
+              // ),
               ElevatedButton(
                 onPressed: () => _videoController?.value.isPlaying == true
                     ? _videoController?.pause()
