@@ -1,5 +1,3 @@
-import 'dart:nativewrappers/_internal/vm/lib/ffi_allocation_patch.dart';
-
 import 'package:beaver_frame_bar/plugin/beaver_frame_bar_cache.dart';
 
 export 'beaver_frame_bar.dart';
