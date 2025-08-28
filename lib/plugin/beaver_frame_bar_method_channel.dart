@@ -1,3 +1,4 @@
+import 'package:beaver_frame_bar/frame.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -37,7 +38,7 @@ class MethodChannelBeaverFrameBar extends BeaverFrameBarPlatform {
 
       return result;
     } on PlatformException catch (e) {
-      print("Failed to get first frame: '$e'");
+      BeaverFrameBarLog.log("Failed to get first frame: '$e'");
       return null;
     }
   }
@@ -102,7 +103,7 @@ class MethodChannelBeaverFrameBar extends BeaverFrameBarPlatform {
         );
       }
     } on PlatformException catch (e) {
-      print("Failed to get key frames stream: '$e'");
+      BeaverFrameBarLog.log("Failed to get key frames stream: '$e'");
     }
   }
 }

@@ -68,10 +68,6 @@ class VideoFrameExtractor: NSObject {
             }
         }
 
-        let keyFrameEndTime = Date()
-        let keyFrameExecutionTime = keyFrameEndTime.timeIntervalSince(startTime)
-        print("Key frame extraction time: \(keyFrameExecutionTime) seconds")
-
         // 计算目标帧数
         var targetFrameCount = keyFrameTimes.count
         
@@ -141,19 +137,11 @@ class VideoFrameExtractor: NSObject {
                     images.append(imageData)
                 }
             }
-            
-            let endTime = Date()
-            let imageConversionTime = endTime.timeIntervalSince(keyFrameEndTime)
-            let totalExecutionTime = endTime.timeIntervalSince(startTime)
-            print("Image conversion time: \(imageConversionTime) seconds")
-            print("Total execution time: \(totalExecutionTime) seconds")
-            print("Selected \(selectedFrameTimes.count) frames from \(keyFrameTimes.count) key frames")
             completion(images)
         }
     }
     
     static func extractFirstFrame(from videoPath: String, completion: @escaping ([FlutterStandardTypedData]?) -> Void) {
-        let startTime = Date()
         let asset = AVAsset(url: URL(fileURLWithPath: videoPath))
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
@@ -164,10 +152,6 @@ class VideoFrameExtractor: NSObject {
         // 获取视频的第一帧（时间戳为0）
         let firstFrameTime = CMTime.zero
         generator.generateCGImagesAsynchronously(forTimes: [NSValue(time: firstFrameTime)]) { _, image, _, result, error in
-            let endTime = Date()
-            let executionTime = endTime.timeIntervalSince(startTime)
-            print("First frame extraction time: \(executionTime) seconds")
-            
             if let image = image, result == .succeeded {
                 let uiImage = UIImage(cgImage: image)
                 if let imageData = uiImage.jpegData(compressionQuality: 0.05) {

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
+import 'package:beaver_frame_bar/frame.dart';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
 
@@ -24,7 +25,7 @@ class BeaverFrameBarCache {
 
     final appDir = await _getApplicationDocumentsDirectory();
     _cacheDir = Directory(path.join(appDir.path, 'beaver_frame_bar_cache'));
-    print('cacheDir: ${_cacheDir!.path}');
+    BeaverFrameBarLog.log('cacheDir: ${_cacheDir!.path}');
 
     if (!await _cacheDir!.exists()) {
       await _cacheDir!.create(recursive: true);
@@ -71,7 +72,7 @@ class BeaverFrameBarCache {
       final cachePath = await _getCacheFilePath(videoPath, suffix: suffix);
       return await File(cachePath).exists();
     } catch (e) {
-      print('Error checking cache: $e');
+      BeaverFrameBarLog.log('Error checking cache: $e');
       return false;
     }
   }
@@ -88,7 +89,7 @@ class BeaverFrameBarCache {
         return await file.readAsBytes();
       }
     } catch (e) {
-      print('Error reading cache: $e');
+      BeaverFrameBarLog.log('Error reading cache: $e');
     }
 
     return null;
@@ -126,9 +127,9 @@ class BeaverFrameBarCache {
       final file = File(cachePath);
 
       await file.writeAsBytes(data);
-      print('Cache saved: $cachePath');
+      BeaverFrameBarLog.log('Cache saved: $cachePath');
     } catch (e) {
-      print('Error caching data in isolate: $e');
+      BeaverFrameBarLog.log('Error caching data in isolate: $e');
     }
   }
 
@@ -224,7 +225,7 @@ class BeaverFrameBarCache {
         return _parseCombinedFrames(combinedData);
       }
     } catch (e) {
-      print('Error reading cached key frames: $e');
+      BeaverFrameBarLog.log('Error reading cached key frames: $e');
     }
 
     return [];
@@ -253,7 +254,7 @@ class BeaverFrameBarCache {
         }
       }
     } catch (e) {
-      print('Error clearing cache: $e');
+      BeaverFrameBarLog.log('Error clearing cache: $e');
     }
   }
 
@@ -268,7 +269,7 @@ class BeaverFrameBarCache {
         await cacheDir.create();
       }
     } catch (e) {
-      print('Error clearing all cache: $e');
+      BeaverFrameBarLog.log('Error clearing all cache: $e');
     }
   }
 
@@ -288,7 +289,7 @@ class BeaverFrameBarCache {
 
       return totalSize;
     } catch (e) {
-      print('Error getting cache size: $e');
+      BeaverFrameBarLog.log('Error getting cache size: $e');
       return 0;
     }
   }
@@ -309,7 +310,7 @@ class BeaverFrameBarCache {
 
       return count;
     } catch (e) {
-      print('Error getting cache file count: $e');
+      BeaverFrameBarLog.log('Error getting cache file count: $e');
       return 0;
     }
   }
